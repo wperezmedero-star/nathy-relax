@@ -412,6 +412,8 @@ transform:scale(0);animation:rpa .6s linear;pointer-events:none}
 /* REVEAL */
 .rv{opacity:0;transform:translateY(30px);transition:opacity .65s ease,transform .65s ease}
 .rv.on{opacity:1;transform:none}
+/* Hero always visible */
+#top,.hero,.hero > *{opacity:1!important;transform:none!important}
 
 /* BOUNCE for typing dots */
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
@@ -447,7 +449,7 @@ transform:scale(0);animation:rpa .6s linear;pointer-events:none}
 
 <!-- HERO -->
 
-<section id="top">
+<section id="top" style="opacity:1;transform:none">
 <div class="hero">
   <div>
     <div class="hero-tag"><div class="tag-dot"></div>Francisco Beltrão, PR</div>
@@ -666,35 +668,40 @@ window.addEventListener('scroll', function() {
 
 // ── SCROLL REVEAL ──
 document.querySelectorAll('.rv').forEach(function(el) {
+  // Skip hero elements
+  if (el.closest('#top')) { el.classList.add('on'); return; }
   new IntersectionObserver(function(entries) {
     entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('on'); });
-  }, {threshold: 0.1}).observe(el);
+  }, {threshold: 0.05, rootMargin: '0px 0px -30px 0px'}).observe(el);
 });
 
 // ── STAGGERED CARDS ──
 ['ben-grid','svc-grid','pkg-grid','testi-grid'].forEach(function(cls) {
   var grid = document.querySelector('.' + cls);
   if (!grid) return;
-  new IntersectionObserver(function(entries) {
-    entries.forEach(function(e) {
-      if (!e.isIntersecting) return;
-      var cards = e.target.children;
-      for (var i = 0; i < cards.length; i++) {
-        (function(card, delay) {
-          setTimeout(function() {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-          }, delay);
-        })(cards[i], i * 110);
-      }
-    });
-  }, {threshold: 0.1}).observe(grid);
   var cards = grid.children;
+  // Set initial hidden state
   for (var i = 0; i < cards.length; i++) {
     cards[i].style.opacity = '0';
     cards[i].style.transform = 'translateY(28px)';
     cards[i].style.transition = 'opacity .55s ease, transform .55s cubic-bezier(.34,1.2,.64,1)';
   }
+  var triggered = false;
+  new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (!e.isIntersecting || triggered) return;
+      triggered = true;
+      var items = e.target.children;
+      for (var i = 0; i < items.length; i++) {
+        (function(card, delay) {
+          setTimeout(function() {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, delay);
+        })(items[i], i * 110);
+      }
+    });
+  }, {threshold: 0.05, rootMargin:'0px 0px -50px 0px'}).observe(grid);
 });
 
 // ── COUNT UP ──
@@ -770,66 +777,25 @@ function faq(btn) {
 
   var KB = {
     servicos: {
-      pt: '🌿 Nossos serviços:
-
-• Massagem Relaxante — R$ 80 (1h)
-• Psicoterapia — R$ 20 (40min)
-• Combo Bem-Estar — R$ 100 (1h + 40min)
-
-Quer saber mais sobre algum?',
-      es: '🌿 Nuestros servicios:
-
-• Masaje Relajante — R$ 80 (1h)
-• Psicoterapia — R$ 20 (40min)
-• Combo Bienestar — R$ 100 (1h + 40min)
-
-¿Quieres saber más sobre alguno?'
+      pt: "Nossos servicos: Massagem Relaxante R$80 (1h), Psicoterapia R$20 (40min), Combo Bem-Estar R$100. Quer saber mais?",
+      es: "Nuestros servicios: Masaje Relajante R$80 (1h), Psicoterapia R$20 (40min), Combo Bienestar R$100. Quieres saber mas?"
     },
     precos: {
-      pt: '💰 Preços:
-• Massagem: R$ 80
-• Psicoterapia: R$ 20
-• Combo: R$ 100
-
-Pacotes:
-• 4 sessões: R$ 360 (economize R$ 40)
-• 8 sessões: R$ 680 (economize R$ 120)',
-      es: '💰 Precios:
-• Masaje: R$ 80
-• Psicoterapia: R$ 20
-• Combo: R$ 100
-
-Paquetes:
-• 4 sesiones: R$ 360 (ahorra R$ 40)
-• 8 sesiones: R$ 680 (ahorra R$ 120)'
+      pt: "Precos: Massagem R$80, Psicoterapia R$20, Combo R$100. Pacotes: 4 sessoes R$360 (economize R$40), 8 sessoes R$680 (economize R$120).",
+      es: "Precios: Masaje R$80, Psicoterapia R$20, Combo R$100. Paquetes: 4 sesiones R$360 (ahorra R$40), 8 sesiones R$680 (ahorra R$120)."
     },
     horarios: {
-      pt: '🕐 Horários:
-• Seg: 8h–22h
-• Ter/Qua: 8h–17h
-• Qui: Fechado
-• Sex: 8h–22h
-• Sáb: 8h–17h
-• Dom: Fechado',
-      es: '🕐 Horarios:
-• Lun: 8h–22h
-• Mar/Mié: 8h–17h
-• Jue: Cerrado
-• Vie: 8h–22h
-• Sáb: 8h–17h
-• Dom: Cerrado'
+      pt: "Horarios de atendimento: Segunda 8h-22h, Terca e Quarta 8h-17h, Quinta fechado, Sexta 8h-22h, Sabado 8h-17h, Domingo fechado.",
+      es: "Horarios de atencion: Lunes 8h-22h, Martes y Miercoles 8h-17h, Jueves cerrado, Viernes 8h-22h, Sabado 8h-17h, Domingo cerrado."
     },
     agendar: {
-      pt: 'Para agendar é só clicar no botão abaixo e mandar uma mensagem para a Nathaly! Ela responde rapidinho 🌸',
-      es: 'Para reservar, haz clic en el botón de abajo y envía un mensaje a Nathaly. ¡Responde muy rápido! 🌸'
+      pt: "Para agendar e so clicar no botao abaixo! A Nathaly responde rapidinho pelo WhatsApp.",
+      es: "Para reservar, haz clic en el boton de abajo. Nathaly responde muy rapido por WhatsApp."
     }
   };
-
   var defaults = {
-    pt: ['Como posso te ajudar? Pergunta sobre serviços, preços ou horários! 🌿',
-         'Estou aqui para ajudar! Pode me perguntar qualquer coisa sobre a Nathaly/Relax 😊'],
-    es: ['¿Cómo puedo ayudarte? ¡Pregúntame sobre servicios, precios u horarios! 🌿',
-         '¡Estoy aquí para ayudarte! Puedes preguntarme lo que quieras sobre Nathy/Relax 😊']
+    pt: ["Como posso te ajudar? Pergunte sobre servicos, precos ou horarios!", "Estou aqui para ajudar com qualquer duvida sobre a Nathaly Relax."],
+    es: ["Como puedo ayudarte? Preguntame sobre servicios, precios u horarios!", "Estoy aqui para ayudarte con cualquier duda sobre Nathy Relax."]
   };
 
   function detect(m) {
@@ -846,8 +812,7 @@ Paquetes:
     var d = document.createElement('div');
     d.className = 'cm ' + type;
     d.style.cssText = 'opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s';
-    d.innerHTML = text.replace(/
-/g, '<br>');
+    d.innerHTML = text.split(String.fromCharCode(10)).join('<br>');
     msgs.appendChild(d);
     msgs.scrollTop = msgs.scrollHeight;
     setTimeout(function() { d.style.opacity='1'; d.style.transform='none'; }, 30);
